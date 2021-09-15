@@ -7,7 +7,7 @@ max_B = 225
 max_G = 225
 max_R = 255
 cap = cv2.VideoCapture(0)
-img = cv2.imread(r"C:\Users\colin\PycharmProjects\Python_3\Drone Project\colorwheel.png",-1)
+img = cv2.imread(r"image file path",-1)
 
 class App():
     def changeValues(self):
