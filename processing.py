@@ -90,17 +90,6 @@ def runImage(varIn):
     cv2.imshow('Original', frame)
     cv2.imshow('With Mask', res)
     cv2.imshow('Mask Detect', mask_with_keypoints)
-    # if cv2.waitKey(20) & 0xFF == ord('q'):
-    #     break
-
-    if cv2.waitKey(20) & 0xFF == ord('b'):
-        print("saving")
-        cv2.imwrite("C:\\Users\\colin\\Desktop\\Edge_detection\\masked.jpg", res)
-        print("saved")
-
-    #cap.realse()
-    #cv2.destroyAllWinows
-
 
 # Tkinter documentation
 # http://infohost.nmt.edu/tcc/help/pubs/tkinter/web/index.html
