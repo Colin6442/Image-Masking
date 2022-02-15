@@ -11,9 +11,10 @@ def runImage(varIn):
     max_H = varIn[4]
     max_S = varIn[5]
     max_V = varIn[6]
+    img_path = varIn[7]
 
     # CV2 uses bgr instead of rgb
-    frame = cv2.imread("C:\\Users\\colin\\Desktop\\decorrelation_stretch\\IMG_4636.jpg")
+    frame = cv2.imread(img_path)
 
     # Change if image is too small/big (100 for no change)
     scale_percent = 20
