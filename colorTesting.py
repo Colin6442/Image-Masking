@@ -1,5 +1,8 @@
 import cv2, numpy as np, os
 
+def resize(img, dim):
+    return(cv2.resize(img, dim, interpolation=cv2.INTER_AREA))
+
 # grey = cv2.imread("lab_01.jpg", 0)
 # color = cv2.imread("lab_01.jpg")
 
@@ -31,27 +34,35 @@ pics = os.listdir(nutsPath)
 
 for pic in pics:
     img = cv2.imread(nutsPath + "\\" + pic)
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
-    img[:, :, 0] = cv2.equalizeHist(img[:, :, 0])
-    img[:, :, 1] = cv2.equalizeHist(img[:, :, 1])
-    img = cv2.cvtColor(cv2.cvtColor(img, cv2.COLOR_LAB2BGR), cv2.COLOR_BGR2HSV)
-
-
+    
     scale_percent = 25
     width = int(img.shape[1] * scale_percent / 100)
     height = int(img.shape[0] * scale_percent / 100)
     down = (width, height)
-
-    img = cv2.resize(img, down)
     
-    cv2.imshow("t", img)
-    cv2.waitKey(0)
-    break
+    img = cv2.resize(img, down)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
+    img[:, :, 0] = cv2.equalizeHist(img[:, :, 0])
+    img[:, :, 1] = cv2.equalizeHist(img[:, :, 1])
+    img = cv2.cvtColor(img, cv2.COLOR_LAB2BGR)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
-    lower = np.array([30, 100, 0])
+    noSky = cv2.cvtColor(cv2.resize(cv2.imread(nutsPath + "\\" + pic), down), cv2.COLOR_BGR2HSV)
+    org = cv2.resize(cv2.imread(nutsPath + "\\" + pic), down)
+    lower = np.array([0, 0, 170])
+    upper = np.array([180, 255, 255])
+    noSky = cv2.inRange(noSky, lower, upper)
+
+    lower = np.array([35, 110, 40])
     upper = np.array([90, 255, 255])
+    noGrass = cv2.inRange(img, lower, upper)
 
-    mask = cv2.inRange(img, lower, upper)
+    mask = cv2.bitwise_and(255-noGrass, 255-noGrass, mask=255-noSky)
+    # cv2.imshow('mask', mask)
+    mask = cv2.bitwise_or(mask, mask, mask= 255-noGrass)
+
+    # cv2.imshow("noSky mask", 255-noSky)
+    # cv2.imshow("noGrass mask", 255-noGrass)
 
     params = cv2.SimpleBlobDetector_Params()
 
@@ -79,22 +90,26 @@ for pic in pics:
     detector = cv2.SimpleBlobDetector_create(params)
 
     # Apply detection to mask
-    keypoints = detector.detect(mask)
+    keypoints = detector.detect(255-mask)
+
+    img = cv2.imread(nutsPath + "\\" + pic)
+    img = resize(img, down)
 
     small = cv2.drawKeypoints(img, keypoints, np.array([]), (0, 0, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
 
-    cv2.imwrite("s" + pic, small)
+    cv2.imwrite("C:\\Users\\colin\\Desktop\\Image-Masking-using-HSV-values\\detection_small\\" + pic, small)
 
     img = cv2.imread(nutsPath + "\\" + pic)
-    
+
     for point in keypoints:
         point.pt = (point.pt[0] * 4, point.pt[1] * 4)
         point.size *= 4
 
     # Draw detected blobs as blue circles.
-    big = cv2.drawKeypoints(img, keypoints, np.array([]), (0, 0, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    large = cv2.drawKeypoints(img, keypoints, np.array([]), (0, 0, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
 
-    cv2.imwrite("b" + pic, big)
+    cv2.imwrite("C:\\Users\\colin\\Desktop\\Image-Masking-using-HSV-values\\detection_large\\" + pic, large)
+    cv2.waitKey(0)
     print("wrote " + pic)
 
     # mask_with_keypoints = cv2.drawKeypoints(out1, keypoints, np.array([]), (255, 0, 0), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
