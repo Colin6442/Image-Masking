@@ -13,6 +13,7 @@ def runImage(varIn):
     max_V = varIn[6]
     img_path = varIn[7]
 
+
     # CV2 uses bgr instead of rgb
     frame = cv2.imread(img_path)
 
@@ -52,6 +53,7 @@ def runImage(varIn):
     elif flip=="flip":
         mask = 255-mask
 
+
     # Apply mask to original image
     res = cv2.bitwise_and(frame,frame, mask= 255-mask)
 
@@ -77,17 +79,17 @@ def runImage(varIn):
     params.filterByConvexity = True
     params.minConvexity = 0.6       # >= 0
     params.maxConvexity = 1.0       # <= 1
-
+    
     # Apply parameters
     detector = cv2.SimpleBlobDetector_create(params)
+    
     # Apply detection to mask
-
     keypoints = detector.detect(mask)
-
+    color = resize(cv2.imread("original.jpg"), dim)
     # Draw detected blobs as red circles.
-    im_with_keypoints = cv2.drawKeypoints(frame, keypoints, np.array([]), (0, 0, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-    mask_with_keypoints = cv2.drawKeypoints(mask, keypoints, np.array([]), (0, 0, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-    cv2.imshow('Detection', im_with_keypoints)
+    normal = cv2.drawKeypoints(color, keypoints, np.array([]), (170, 0, 170), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    mask_with_keypoints = cv2.drawKeypoints(mask, keypoints, np.array([]), (170, 0, 170), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    cv2.imshow('Detection', normal)
     cv2.imshow('Original', frame)
     cv2.imshow('With Mask', res)
     cv2.imshow('Mask Detect', mask_with_keypoints)

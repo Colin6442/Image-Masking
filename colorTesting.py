@@ -1,133 +1,114 @@
-import cv2, numpy as np
-from matplotlib import pyplot as plt
-#from sklearn.cluster import KMeans
+import cv2, numpy as np, os
 
-# pic = plt.imread('img1.jpg')/255
-# pic_n = pic.reshape(pic.shape[0]*pic.shape[1], pic.shape[2])
-# kmeans = KMeans(n_clusters=5, random_state=0).fit(pic_n)
-# pic2show = kmeans.cluster_centers_[kmeans.labels_]
-# cluster_pic = pic2show.reshape(pic.shape[0], pic.shape[1], pic.shape[2])
-# plt.imshow(cluster_pic)
-# plt.imsave("filter.jpg", cluster_pic)
-
-grey = cv2.imread('img3.jpg', 0)
-color = cv2.imread('img3.jpg')
-ycrcb = cv2.imread('img3.jpg')
-equalize = cv2.cvtColor(color, cv2.COLOR_BGR2YCrCb)
-
-for x in range(3):
-    equalize[:, :, 0] = 0
-    equalize[:, :, 1] = 0
-    equalize[:, :, 2] = cv2.equalizeHist(equalize[:, :, 2])
-    cv2.imwrite("hsv_"+ x +"_no12.jpg", equalize)
+# grey = cv2.imread("lab_01.jpg", 0)
+# color = cv2.imread("lab_01.jpg")
 
 # clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
 # imgClahe = clahe.apply(grey)
-# # cv.imwrite('clahe_2.jpg', imgClahe)
 
-# lab = cv2.cvtColor(color, cv2.COLOR_BGR2LAB)
-
-# l, a, b = cv2.split(lab)
-# clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8,8))
-# cl = clahe.apply(l)
-
-# limg = cv2.merge((cl,a,b))
-
-# final = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
-# final = cv2.cvtColor(final, cv2.COLOR_BGR2GRAY)
-# #cv2.imwrite('img0.jpg', final)
-
-# constant = 6
-# pixSize = 899
+# constant = 26
+# pixSize = 299
 
 # thresh1 = cv2.adaptiveThreshold(grey, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, pixSize, constant)
 # # thresh2 = cv2.adaptiveThreshold(grey, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, pixSize, constant)
-# thresh3 = cv2.adaptiveThreshold(ycrcb, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, pixSize, constant)
+# # thresh3 = cv2.adaptiveThreshold(ycrcb, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, pixSize, constant)
 # # thresh4 = cv2.adaptiveThreshold(ycrcb, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, pixSize, constant)
 
 # out1 = cv2.bitwise_and(color, color, mask= 255 - thresh1)
 # # out2 = cv2.bitwise_and(color, color, mask= 255 - thresh2)
-# out3 = cv2.bitwise_and(color, color, mask= thresh3)
+# # out3 = cv2.bitwise_and(color, color, mask= thresh3)
 # # out4 = cv2.bitwise_and(color, color, mask= 255 - thresh4)
 
 # cv2.imwrite("mean.png", out1)
 # # cv2.imwrite("gaus.png", out2)
-# cv2.imwrite("mean2.png", out3)
+# # cv2.imwrite("mean2.png", out3)
 # # cv2.imwrite("gaus2.png", out4)
 
-# ycrcb = cv2.cvtColor(ycrcb, cv2.COLOR_BGR2YCrCb)
-# ycrcb[:, :, 0] = cv2.equalizeHist(ycrcb[:, :, 0])
-# # ycrcsb[:, :, 1] = cv2.equalizeHist(ycrcb[:, :, 1])
-# ycrcb[:, :, 2] = cv2.equalizeHist(ycrcb[:, :, 2])
-# lower = np.array([0, 0, 100])
-# upper = np.array([120, 255, 255])
-# mask = cv2.inRange(ycrcb, lower, upper)
-# out2 = cv2.bitwise_and(color, color, mask= mask)
-# cv2.imwrite("mask.jpg", mask)
-# cv2.imwrite("masked.jpg", out2)
-
-# scale_percent = 25
-# width = int(grey.shape[1] * scale_percent / 100)
-# height = int(grey.shape[0] * scale_percent / 100)
-# dim = (width, height)
 
 
+nutsPath = "C:\\Users\\colin\\Desktop\\MommyNuts"
+pics = os.listdir(nutsPath)
 
-# params = cv2.SimpleBlobDetector_Params()
+for pic in pics:
+    img = cv2.imread(nutsPath + "\\" + pic)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
+    img[:, :, 0] = cv2.equalizeHist(img[:, :, 0])
+    img[:, :, 1] = cv2.equalizeHist(img[:, :, 1])
+    img = cv2.cvtColor(cv2.cvtColor(img, cv2.COLOR_LAB2BGR), cv2.COLOR_BGR2HSV)
 
-# # Filter by how oval shapped it can be
-# params.filterByInertia = True
-# params.minInertiaRatio = 0.1    # >= 0
-# params.maxInertiaRatio = 1.0    # <= 1
 
-# # Filter by Area.
-# params.filterByArea = True
-# params.minArea = 20            # >= 0
-# params.maxArea= 5000             # big number
+    scale_percent = 25
+    width = int(img.shape[1] * scale_percent / 100)
+    height = int(img.shape[0] * scale_percent / 100)
+    down = (width, height)
 
-# # Filter by Circularity
-# params.filterByCircularity = True
-# params.minCircularity = 0.5     # >= 0
-# params.maxCircularity = 1.0     # <= 1
+    img = cv2.resize(img, down)
+    
+    cv2.imshow("t", img)
+    cv2.waitKey(0)
+    break
 
-# # Filter by Convexity
-# params.filterByConvexity = True
-# params.minConvexity = 0.6       # >= 0
-# params.maxConvexity = 1.0       # <= 1
+    lower = np.array([30, 100, 0])
+    upper = np.array([90, 255, 255])
 
-# # Apply parameters
-# detector = cv2.SimpleBlobDetector_create(params)
-# # Apply detection to mask
+    mask = cv2.inRange(img, lower, upper)
 
-# keypoints = detector.detect(mask)
+    params = cv2.SimpleBlobDetector_Params()
 
-# # Draw detected blobs as red circles.
-# im_with_keypoints = cv2.drawKeypoints(ycrcb, keypoints, np.array([]), (0, 0, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-# mask_with_keypoints = cv2.drawKeypoints(mask, keypoints, np.array([]), (0, 0, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    # Filter by how oval shapped it can be
+    params.filterByInertia = True
+    params.minInertiaRatio = 0.1    # >= 0
+    params.maxInertiaRatio = 1.0    # <= 1
+
+    # Filter by Area.
+    params.filterByArea = True
+    params.minArea = 20            # >= 0
+    params.maxArea= 5000             # big number
+
+    # Filter by Circularity
+    params.filterByCircularity = True
+    params.minCircularity = 0.5     # >= 0
+    params.maxCircularity = 1.0     # <= 1
+
+    # Filter by Convexity
+    params.filterByConvexity = True
+    params.minConvexity = 0.6       # >= 0
+    params.maxConvexity = 1.0       # <= 1
+
+    # Apply parameters
+    detector = cv2.SimpleBlobDetector_create(params)
+
+    # Apply detection to mask
+    keypoints = detector.detect(mask)
+
+    small = cv2.drawKeypoints(img, keypoints, np.array([]), (0, 0, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+
+    cv2.imwrite("s" + pic, small)
+
+    img = cv2.imread(nutsPath + "\\" + pic)
+    
+    for point in keypoints:
+        point.pt = (point.pt[0] * 4, point.pt[1] * 4)
+        point.size *= 4
+
+    # Draw detected blobs as blue circles.
+    big = cv2.drawKeypoints(img, keypoints, np.array([]), (0, 0, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+
+    cv2.imwrite("b" + pic, big)
+    print("wrote " + pic)
+
+    # mask_with_keypoints = cv2.drawKeypoints(out1, keypoints, np.array([]), (255, 0, 0), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
 
 
 # mask_with_keypoints = cv2.resize(mask_with_keypoints, dim)
-# cv2.imshow("detection", mask_with_keypoints)
+# cv2.imshow("mask", mask_with_keypoints)
+# im_with_keypoints = cv2.resize(im_with_keypoints, dim)
+# cv2.imshow("detection", im_with_keypoints)
 
-# # thresh1 = cv2.resize(thresh1, dim)
-# # thresh2 = cv2.resize(thresh2, dim)
+# thresh1 = cv2.resize(thresh1, dim)
+# thresh2 = cv2.resize(thresh2, dim)
 # mask = cv2.resize(mask, dim)
 # out2 = cv2.resize(out2, dim)
 
 
-
-# # cv2.imshow('Adaptive Mean', thresh1)
-# # cv2.imshow('Adaptive Gaussian', thresh2)
-# cv2.imshow("mask", mask)
-# cv2.imshow("masked", out2)
-
-# b = cv2.calcHist([grey], [0], None, [256], [0,256])
-# g = cv2.calcHist([grey], [1], None, [256], [0,256])
-# r = cv2.calcHist([grey], [2], None, [256], [0,256])
-
-# plt.plot(b)
-# plt.plot(g)
-# plt.plot(r)
-# plt.show()
-
-cv2.waitKey(0)
+# cv2.waitKey(0)
