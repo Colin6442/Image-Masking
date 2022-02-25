@@ -28,13 +28,18 @@ def resize(img, dim):
 # # cv2.imwrite("gaus2.png", out4)
 
 
-
 nutsPath = "C:\\Users\\colin\\Desktop\\MommyNuts"
 pics = os.listdir(nutsPath)
 
 for pic in pics:
+    pic = "IMG_4624.JPG"
     img = cv2.imread(nutsPath + "\\" + pic)
+    # img = cv2.GaussianBlur(img,(25,25),cv2.BORDER_DEFAULT)
+    # Rectangular Kernel
     
+    kernel = np.ones((2,2),np.uint8)
+    noChange = img.copy()
+
     scale_percent = 25
     width = int(img.shape[1] * scale_percent / 100)
     height = int(img.shape[0] * scale_percent / 100)
@@ -47,8 +52,7 @@ for pic in pics:
     img = cv2.cvtColor(img, cv2.COLOR_LAB2BGR)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
-    noSky = cv2.cvtColor(cv2.resize(cv2.imread(nutsPath + "\\" + pic), down), cv2.COLOR_BGR2HSV)
-    org = cv2.resize(cv2.imread(nutsPath + "\\" + pic), down)
+    noSky = cv2.cvtColor(cv2.resize(noChange.copy(), down), cv2.COLOR_BGR2HSV)
     lower = np.array([0, 0, 170])
     upper = np.array([180, 255, 255])
     noSky = cv2.inRange(noSky, lower, upper)
@@ -58,8 +62,13 @@ for pic in pics:
     noGrass = cv2.inRange(img, lower, upper)
 
     mask = cv2.bitwise_and(255-noGrass, 255-noGrass, mask=255-noSky)
-    # cv2.imshow('mask', mask)
     mask = cv2.bitwise_or(mask, mask, mask= 255-noGrass)
+
+    small = resize(noChange.copy(), down)
+    cv2.imshow("test", cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel))
+    cv2.waitKey(0)
+    break
+    continue
 
     # cv2.imshow("noSky mask", 255-noSky)
     # cv2.imshow("noGrass mask", 255-noGrass)
@@ -92,14 +101,14 @@ for pic in pics:
     # Apply detection to mask
     keypoints = detector.detect(255-mask)
 
-    img = cv2.imread(nutsPath + "\\" + pic)
+    img = noChange.copy()
     img = resize(img, down)
 
     small = cv2.drawKeypoints(img, keypoints, np.array([]), (0, 0, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
 
     cv2.imwrite("C:\\Users\\colin\\Desktop\\Image-Masking-using-HSV-values\\detection_small\\" + pic, small)
 
-    img = cv2.imread(nutsPath + "\\" + pic)
+    img = noChange.copy()
 
     for point in keypoints:
         point.pt = (point.pt[0] * 4, point.pt[1] * 4)
