@@ -28,6 +28,8 @@ def getNumFromAnnotation(annotate):
 	return numOut
 
 
+testAng = 40
+
 # angles
 angUpper = 360
 angLower = 0
@@ -73,7 +75,7 @@ corners[3][0] = int(origin[0] + round(annotateNums[3]/2 * pic.shape[0]))
 print(corners)
 
 for i, x in enumerate(corners):
-	corners[i] = rotate(x, [pic.shape[1]/2, pic.shape[0]/2], 60)
+	corners[i] = rotate(x, [pic.shape[1]/2, pic.shape[0]/2], testAng)
 
 
 # cv2.imshow("corners", cv2.resize(pic, (800,800)))
@@ -103,17 +105,25 @@ corners[1][1] = int(newY)
 corners[2][1] = int(2*origin[1] - newY)
 corners[3][1] = int(2*origin[1] - newY)
 
-
-mat = cv2.getRotationMatrix2D((200/2,200/2), 60, 1.0)
+mat = cv2.getRotationMatrix2D((200/2,200/2), testAng, 1.0)
 img = cv2.warpAffine(pic, mat, (200, 200))
 
 for x in corners:
 	img[x[0], x[1]] = [255,0,0]
 
-cv2.imshow("corners", cv2.resize(img, (800,800)))
+cv2.imshow("something", cv2.resize(img, (800, 800)))
 cv2.waitKey(0)
+cv2.imwrite("C:\\Users\\colin\\Desktop\\transformed\\" + "IMG_10" + "_A-" + str(testAng) + "_W-" + str(100) + "_H-" + str(100) + ".jpg", cv2.resize(img, (pic.shape[1],pic.shape[0])))
 
-newAnnotations = []
+newAnnotations = ["0 "]
+newAnnotations.append(str(origin[0]/pic.shape[1]) + " ")
+newAnnotations.append(str(origin[1]/pic.shape[0]) + " ")
+newAnnotations.append(str(2*(newY-origin[1])/pic.shape[0]) + " ")
+newAnnotations.append(str(2*(newX-origin[0])/pic.shape[1]))
+
+createAnnotation = open("C:\\Users\\colin\\Desktop\\transformed\\" + "IMG_10" + "_A-" + str(testAng) + "_W-" + str(100) + "_H-" + str(100) + ".txt", "w+")
+createAnnotation.write(newAnnotations[0] + newAnnotations[1] + newAnnotations[2] + newAnnotations[3] + newAnnotations[4])
+createAnnotation.close()
 
 # for pic in pics:
 	# if pic[-4:] == ".JPG":
