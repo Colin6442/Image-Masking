@@ -1,8 +1,25 @@
 import cv2, numpy as np, os, math
 
-# Rotation - A&B: point - X&Y: origin
-# x = A*cos(a) - B*sin(a) + X - X*cos(a) + Y*sin(a)
-# y = A*sin(a) + B*cos(a) + Y - X*sin(a) - Y*cos(a)
+# angles
+angUpper = 360 		# upper bounds of rotation angle
+angLower = 0		# lower bounds of rotation angle
+angIncrement = 45	# increment of rotation angle
+					# same below v
+# scale percent width
+spwUpper = 151		# set 1 higher to make sure it is included
+spwLower = 100
+spwIncrement = 50
+
+# scale percent height
+sphUpper = 151
+sphLower = 100
+sphIncrement = 50
+
+# paths
+nutsPath = "C:\\Users\\colin\\Desktop\\Sky_BG\\"
+outputPath = "C:\\Users\\colin\\Desktop\\transformed\\"
+pics = os.listdir(nutsPath)
+
 
 def rotate(XY, origin, angle):
 	x = XY[0] * math.cos(math.radians(angle)) - XY[1] * math.sin(math.radians(angle)) + origin[0] - origin[0] * math.cos(math.radians(angle)) + origin[1] * math.sin(math.radians(angle))
@@ -28,123 +45,82 @@ def getNumFromAnnotation(annotate):
 	return numOut
 
 
-testAng = 40
+for pic in pics:
+	if pic[-4:] == ".JPG":
+		original = cv2.imread(nutsPath + "\\" + pic)
+		annotate = open(nutsPath + pic[:-4] + ".txt", "r").read()
+		for ang in range(angLower, angUpper, angIncrement):
+			for spw in range(spwLower, spwUpper, spwIncrement):
+				for sph in range(sphLower, sphUpper, sphIncrement):
+					if spw != sph or spw == 100:
+						img = original.copy()
 
-# angles
-angUpper = 360
-angLower = 0
-angIncrement = 90
+						#			TL  ,  TR  ,  BL  ,  BR
+						corners = [[0,0], [0,0], [0,0], [0,0]]
 
-# scale percent width
-spwUpper = 151
-spwLower = 100
-spwIncrement = 50
+						# Set new width
+						width = int(img.shape[1] * spw / 100)
+						height = int(img.shape[0] * sph / 100)
 
-# scale percent height
-sphUpper = 151
-sphLower = 100
-sphIncrement = 50
-
-# paths
-nutsPath = "C:\\Users\\colin\\Desktop\\Sky_BG\\"
-pics = os.listdir(nutsPath)
+						# Start with resize
 
 
-#			TL  ,  TR  ,  BL  ,  BR
-corners = [[0,0], [0,0], [0,0], [0,0]]
-
-pic = cv2.imread(nutsPath + "IMG_10.JPG")
-annotate = open(nutsPath + "IMG_10.txt", "r").read()
-
-# [originX, originY, width, height]
-annotateNums = getNumFromAnnotation(annotate)
-
-origin = [(annotateNums[0] * pic.shape[1]), (annotateNums[1] * pic.shape[0])]
-
-
-corners[0][1] = int(origin[1] - round(annotateNums[2]/2 * pic.shape[1]))
-corners[1][1] = int(origin[1] + round(annotateNums[2]/2 * pic.shape[1]))
-corners[2][1] = int(origin[1] - round(annotateNums[2]/2 * pic.shape[1]))
-corners[3][1] = int(origin[1] + round(annotateNums[2]/2 * pic.shape[1]))
-
-corners[0][0] = int(origin[0] - round(annotateNums[3]/2 * pic.shape[0]))
-corners[1][0] = int(origin[0] - round(annotateNums[3]/2 * pic.shape[0]))
-corners[2][0] = int(origin[0] + round(annotateNums[3]/2 * pic.shape[0]))
-corners[3][0] = int(origin[0] + round(annotateNums[3]/2 * pic.shape[0]))
-
-print(corners)
-
-for i, x in enumerate(corners):
-	corners[i] = rotate(x, [pic.shape[1]/2, pic.shape[0]/2], testAng)
+						# Setup annotation array and corners array
+						# [originX, originY, width, height]
+						annotateNums = getNumFromAnnotation(annotate)
+						origin = [(annotateNums[0] * width), (annotateNums[1] * height)]
+						corners[0][1] = int(origin[1] - round(annotateNums[2]/2 * width))
+						corners[1][1] = int(origin[1] + round(annotateNums[2]/2 * width))
+						corners[2][1] = int(origin[1] - round(annotateNums[2]/2 * width))
+						corners[3][1] = int(origin[1] + round(annotateNums[2]/2 * width))
+						corners[0][0] = int(origin[0] - round(annotateNums[3]/2 * height))
+						corners[1][0] = int(origin[0] - round(annotateNums[3]/2 * height))
+						corners[2][0] = int(origin[0] + round(annotateNums[3]/2 * height))
+						corners[3][0] = int(origin[0] + round(annotateNums[3]/2 * height))
+						print(corners)
 
 
-# cv2.imshow("corners", cv2.resize(pic, (800,800)))
-# cv2.waitKey(0)
+						# Rotate corners for annotation
+						for i, x in enumerate(corners):
+							corners[i] = rotate(x, [width/2, height/2], ang)
 
-# for x in corners:
-# 	pic[x[0], x[1]] = [255,0,255]
+						# Fix corners to be parallel with respictive axis
+						newX = 0
+						newY = 0
+						for corner in corners:
+							if corner[0] > newX:
+								newX = corner[0]
+							if corner[1] > newY:
+								newY = corner[1]
 
-# cv2.imshow("corners", cv2.resize(pic, (800,800)))
-# cv2.waitKey(0)
+						# Apply corner fixes
+						corners[0][0] = int(2*origin[0] - newX)
+						corners[1][0] = int(newX)
+						corners[2][0] = int(2*origin[0] - newX)
+						corners[3][0] = int(newX)
 
-newX = 0
-newY = 0
-for corner in corners:
-	if corner[0] > newX:
-		newX = corner[0]
-	if corner[1] > newY:
-		newY = corner[1]
+						corners[0][1] = int(newY)
+						corners[1][1] = int(newY)
+						corners[2][1] = int(2*origin[1] - newY)
+						corners[3][1] = int(2*origin[1] - newY)
 
-corners[0][0] = int(2*origin[0] - newX)
-corners[1][0] = int(newX)
-corners[2][0] = int(2*origin[0] - newX)
-corners[3][0] = int(newX)
+						# Stretch / Rotate image
+						img = cv2.resize(img, (width, height))
+						mat = cv2.getRotationMatrix2D((width/2,height/2), ang, 1.0)
+						img = cv2.warpAffine(img, mat, (width, height))
 
-corners[0][1] = int(newY)
-corners[1][1] = int(newY)
-corners[2][1] = int(2*origin[1] - newY)
-corners[3][1] = int(2*origin[1] - newY)
+						# Write image
+						cv2.imwrite(outputPath + pic[:-4] + "_A-" + str(ang) + "_W-" + str(spw) + "_H-" + str(sph) + ".jpg", img)
 
-mat = cv2.getRotationMatrix2D((200/2,200/2), testAng, 1.0)
-img = cv2.warpAffine(pic, mat, (200, 200))
+						# Write annotations
+						newAnnotations = ["0 "]
+						newAnnotations.append(str(origin[0]/width) + " ")
+						newAnnotations.append(str(origin[1]/height) + " ")
+						newAnnotations.append(str(2*(newY-origin[1])/height) + " ")
+						newAnnotations.append(str(2*(newX-origin[0])/width))
 
-for x in corners:
-	img[x[0], x[1]] = [255,0,0]
-
-cv2.imshow("something", cv2.resize(img, (800, 800)))
-cv2.waitKey(0)
-cv2.imwrite("C:\\Users\\colin\\Desktop\\transformed\\" + "IMG_10" + "_A-" + str(testAng) + "_W-" + str(100) + "_H-" + str(100) + ".jpg", cv2.resize(img, (pic.shape[1],pic.shape[0])))
-
-newAnnotations = ["0 "]
-newAnnotations.append(str(origin[0]/pic.shape[1]) + " ")
-newAnnotations.append(str(origin[1]/pic.shape[0]) + " ")
-newAnnotations.append(str(2*(newY-origin[1])/pic.shape[0]) + " ")
-newAnnotations.append(str(2*(newX-origin[0])/pic.shape[1]))
-
-createAnnotation = open("C:\\Users\\colin\\Desktop\\transformed\\" + "IMG_10" + "_A-" + str(testAng) + "_W-" + str(100) + "_H-" + str(100) + ".txt", "w+")
-createAnnotation.write(newAnnotations[0] + newAnnotations[1] + newAnnotations[2] + newAnnotations[3] + newAnnotations[4])
-createAnnotation.close()
-
-# for pic in pics:
-	# if pic[-4:] == ".JPG":
-	# 	original = cv2.imread(nutsPath + "\\" + pic)
-	# 	for ang in range(angLower, angUpper, angIncrement):
-	# 		for spw in range(spwLower, spwUpper, spwIncrement):
-	# 			for sph in range(sphLower, sphUpper, sphIncrement):
-	# 				if spw != sph or spw == 100:
-	# 					img = original.copy()
-				
-
-
-	# 					width = int(img.shape[1] * spw / 100)
-	# 					height = int(img.shape[0] * sph / 100)
-				
-
-
-	# 					img = cv2.resize(img, (width, height))
-	# 					mat = cv2.getRotationMatrix2D((width/2,height/2), ang, 1.0)
-	# 					img = cv2.warpAffine(img, mat, (width, height))
-
-	# 					print("C:\\Users\\colin\\Desktop\\transformed\\" + pic[:-4] + "_A-" + str(ang) + "_W-" + str(spw) + "_H-" + str(sph) + ".jpg")
-	# 					cv2.imwrite("C:\\Users\\colin\\Desktop\\transformed\\" + pic[:-4] + "_A-" + str(ang) + "_W-" + str(spw) + "_H-" + str(sph) + ".jpg", img)
-        
+						createAnnotation = open(outputPath + pic[:-4] + "_A-" + str(ang) + "_W-" + str(spw) + "_H-" + str(sph) + ".txt", "w+")
+						createAnnotation.write(newAnnotations[0] + newAnnotations[1] + newAnnotations[2] + newAnnotations[3] + newAnnotations[4])
+						createAnnotation.close()
+						cv2.imshow("something", cv2.resize(img, (width*2, height*2)))
+						cv2.waitKey(0)
